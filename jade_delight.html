@@ -1,0 +1,234 @@
+
+<!DOCTYPE html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Jade Delight</title>
+<style>
+	.userInfo label{
+		display: inline-block;
+		width: 90px;
+	}
+</style>
+</head>
+
+<body>
+
+<script   src="https://code.jquery.com/jquery-3.1.1.min.js"   integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="   crossorigin="anonymous">
+</script>
+	
+<script>
+
+function MenuItem(name, cost)
+{
+	this.name = name;
+	this.cost=cost;
+}
+
+menuItems = new Array(
+	new MenuItem("Chicken Chop Suey", 4.5),
+	new MenuItem("Sweet and Sour Pork", 6.25),
+	new MenuItem("Shrimp Lo Mein", 6.25),
+	new MenuItem("Moo Shi Chicken", 7.5),
+	new MenuItem("Fried Rice", 2.85)
+);
+
+function makeSelect(name, minRange, maxRange)
+{
+	var t= "";
+	t = "<select name='" + name + "' size='1'>";
+	for (j=minRange; j<=maxRange; j++)
+	   t += "<option>" + j + "</option>";
+	t+= "</select>"; 
+	return t;
+}
+
+function td(content, className="")
+{
+	return "<td class = '" + className + "'>" + content + "</td>";
+}
+	
+	function hideLoc()
+	{
+		if (document.getElementsByName("p_or_d")[0].checked) {
+			$(document.getElementsByClassName('userInfo address')[0]).hide();
+			$(document.getElementsByClassName('userInfo address')[1]).hide();
+		} else {
+			$(document.getElementsByClassName('userInfo address')[0]).show();
+			$(document.getElementsByClassName('userInfo address')[1]).show();
+		}
+	}
+
+	function fillCost()
+	{
+		ccs = ($(document.getElementsByTagName('select'))[0].value * 4.5).toFixed(2);
+		ssp = ($(document.getElementsByTagName('select'))[1].value * 6.25).toFixed(2);
+		slm = ($(document.getElementsByTagName('select'))[2].value * 6.25).toFixed(2);
+		msc = ($(document.getElementsByTagName('select'))[3].value * 7.5).toFixed(2);
+		fr  = ($(document.getElementsByTagName('select'))[4].value * 2.85).toFixed(2);
+		
+		$(document.getElementsByName("cost"))[0].value = ccs
+		$(document.getElementsByName("cost"))[1].value = ssp
+		$(document.getElementsByName("cost"))[2].value = slm;
+		$(document.getElementsByName("cost"))[3].value = msc;
+		$(document.getElementsByName("cost"))[4].value  = fr;
+
+		sub = parseFloat(ccs) + parseFloat(ssp) + parseFloat(slm) + parseFloat(msc) + parseFloat(fr);
+		taxed = parseFloat((sub*.0625).toFixed(2));
+		total = sub + taxed;
+
+		$(document.getElementsByName("subtotal"))[0].value = sub.toFixed(2);
+		$(document.getElementsByName("tax"))[0].value = taxed.toFixed(2);
+		$(document.getElementsByName("total"))[0].value = total.toFixed(2);
+
+		return [sub, taxed, total, document.getElementsByTagName('select')[0].value, document.getElementsByTagName('select')[1].value, document.getElementsByTagName('select')[2].value, document.getElementsByTagName('select')[3].value, document.getElementsByTagName('select')[4].value];
+	}
+
+	function style(){
+		subP = $(document.getElementsByClassName("subtotal totalSection"))[0]
+		subP.getElementsByTagName('label')[0].style.display = "inline-block";
+		subP.getElementsByTagName('label')[0].style.paddingRight = "49px";
+
+		taxP = $(document.getElementsByClassName("tax totalSection"))[0];
+		taxP.getElementsByTagName('label')[0].style.display = "inline-block";
+		
+		totP = $(document.getElementsByClassName("total totalSection"))[0]
+		totP.getElementsByTagName('label')[0].style.display = "inline-block";
+		totP.getElementsByTagName('label')[0].style.paddingRight = "70px";
+	}
+
+	function isEmpty(str) 
+	{
+    	return !str.trim().length;
+	}
+	
+	function calcDate(pickup)
+	{
+		var currTime = new Date();
+		if (pickup) {
+			currTime.setTime(currTime.getTime() + 15*60*1000);
+		} else {
+			currTime.setTime(currTime.getTime() + 30*60*1000);
+		}
+		
+		return currTime.toLocaleTimeString();
+
+	}
+
+	function newWindow(timeStr, totals)
+	{
+		const page = window.open("", "", "width=300,height=300");
+		page.document.write(totals[3] + " Chicken Chop Suey<br>" + totals[4] + " Sweet and Sour Pork<br>" + totals[5] + " Shrimp Lo Mein<br>" + totals[6] + " Moo Shi Chicken<br>" + totals[7] + " Fried Rice" + "<br><br>Subtotal: $" +  totals[0].toFixed(2) + "<br>Tax: $" + totals[1].toFixed(2) + "<br>Total: $" + totals[2].toFixed(2) + "<br>Order ready at: " + timeStr);
+	}
+
+	function validate(totals) 
+	{
+		ccs = parseInt($(document.getElementsByTagName('select'))[0].value);
+		ssp = parseInt($(document.getElementsByTagName('select'))[1].value);
+		slm = parseInt($(document.getElementsByTagName('select'))[2].value);
+		msc = parseInt($(document.getElementsByTagName('select'))[3].value);
+		fr  = parseInt($(document.getElementsByTagName('select'))[4].value);
+		if (ccs  == 0 && ssp == 0 && slm == 0 && msc == 0 && fr == 0) {
+			alert("INVALID: Must order something!");
+			return;
+		}
+
+		strP  = $(document.getElementsByTagName('input'))[2].value;
+		cityP = $(document.getElementsByTagName('input'))[3].value;
+		if ((isEmpty(strP) || isEmpty(cityP)) 
+			&& document.getElementsByName("p_or_d")[1].checked) {
+			alert("INVALID: City and Street required for delivery!");
+			return;
+		}
+
+		last = $(document.getElementsByTagName('input'))[1].value;
+
+		if (isEmpty(last)) {
+			alert("INVALID: Last name required!");
+			return;
+		}
+
+		num = parseInt(($(document.getElementsByTagName('input'))[4].value).trim());
+		num = (num.toString()).length;
+
+		if (num != 7 && num != 10) {
+			alert("INVALID: Please enter a valid phone number!");
+			return;
+		}
+
+		alert("Thank you for the order!");
+		
+		newWindow(calcDate(document.getElementsByName("p_or_d")[0].checked), totals);
+	}
+
+	$( document ).ready(function() {
+		hideLoc();
+		fillCost();
+		style();
+		totals = [];
+
+		$(document.getElementsByName("p_or_d")).click(function() {
+  			hideLoc();
+		});
+		$(document.getElementsByTagName('select')).click(function() {
+  			totals = fillCost();
+		});
+		$(document.getElementsByTagName('input')[15]).click(function() {
+  			validate(totals);
+		});
+	});	
+
+
+</script>
+
+<h1>Jade Delight</h1>
+<form>
+
+<p class="userInfo"><label>First Name:</label> <input type="text"  name='fname' /></p>
+<p class="userInfo"><label>Last Name*:</label>  <input type="text"  name='lname' /></p>
+<p class="userInfo address"><label>Street*:</label> <input type="text" name='street' /></p>
+<p class="userInfo address"><label>City*:</label> <input type="text" name='city' /></p>
+<p class="userInfo"><label>Phone*:</label> <input type="text"  name='phone' /></p>
+<p> 
+	<input type="radio"  name="p_or_d" value = "pickup" checked="checked"/>Pickup  
+	<input type="radio"  name='p_or_d' value = 'delivery'/>
+	Delivery
+</p>
+<table border="0" cellpadding="3">
+  <tr>
+    <th>Select Item</th>
+    <th>Item Name</th>
+    <th>Cost Each</th>
+    <th>Total Cost</th>
+  </tr>
+<script>
+
+  var s = "";
+  for (i=0; i< menuItems.length; i++)
+  {
+	  s += "<tr>";
+	  s += td(makeSelect("quan" + i, 0, 10),"selectQuantity");
+	  s += td(menuItems[i].name, "itemName");
+	  s += td("$" +menuItems[i].cost.toFixed(2), "cost");
+	  s += td("$<input type='text' name='cost'/>", "totalCost");
+	  s+= "</tr>";
+  }
+  document.writeln(s);
+</script>
+</table>
+<p class="subtotal totalSection"><label>Subtotal:</label> 
+   $ <input type="text"  name='subtotal' id="subtotal" />
+</p>
+<p class="tax totalSection"><label>Mass tax 6.25%:</label>
+  $ <input type="text"  name='tax' id="tax" />
+</p>
+<p class="total totalSection"><label>Total:</label> $ <input type="text"  name='total' id="total" />
+</p>
+
+<input type = "button" value = "Submit Order" />
+
+</form>
+</body>
+<script>
+	
+</script>
+</html>
